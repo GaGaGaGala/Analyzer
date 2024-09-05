@@ -1,3 +1,4 @@
+
 import os
 import csv
 import json
@@ -15,19 +16,30 @@ class PriceMachine():
             'цена': ['цена', 'розница'],
             'вес': ['фасовка', 'масса', 'вес']
         }
+        # Проверяем наличие папки
+        if not os.path.exists(file_path):
+            print(f"Путь '{file_path}' не найден.")
+            return
+
         for file in os.listdir(file_path):
             if file.endswith('.csv'):
-                with open(os.path.join(file_path, file), 'r', encoding='utf-8') as csv_file:
-                    csv_reader = csv.DictReader(csv_file, delimiter=',')
-                    for row in csv_reader:
-                        data = {'файл': file}
-                        for key, possible_keys in key_data.items():
-                            for possible_key in possible_keys:
-                                if possible_key in row:
-                                    data[key] = row[possible_key]
-                                    break
-                        self.data.append(data)
-
+                try:
+                    with open(os.path.join(file_path, file), 'r', encoding='utf-8') as csv_file:
+                        csv_reader = csv.DictReader(csv_file, delimiter=',')
+                        print(f"Чтение файла: {file}")  # Информирование о процессе чтения файла
+                        for row in csv_reader:
+                            data = {'файл': file}
+                            for key, possible_keys in key_data.items():
+                                for possible_key in possible_keys:
+                                    if possible_key in row:
+                                        data[key] = row[possible_key]
+                                        break
+                            self.data.append(data)
+                    print(f"Файл {file} успешно прочитан.")  # Успешное завершение чтения файла
+                except Exception as e:
+                    print(f"Ошибка при чтении файла {file}: {e}")
+            else:
+                print(f"Файл {file} пропущен, так как не является CSV.")
     def export_to_console(self):
         for idx, product in enumerate(self.data, 1):
             print(
@@ -42,7 +54,7 @@ class PriceMachine():
     def export_to_html(self, fname='output.html'):
         if self.data:
             sorted_data = sorted(self.data, key=lambda x: float(x.get('цена', 0)) / float(x.get('вес', 1)))
-            with open(file_name='output.html', 'w', encoding='utf-8') as file:
+            with open(fname, 'w', encoding='utf-8') as file:
                 file.write('''
                 <!DOCTYPE html>
                 <html>
@@ -63,7 +75,10 @@ class PriceMachine():
                 ''')
                 for idx, row in enumerate(sorted_data, start=1):
                     item_name = row.get('название', '')
-                    price_per_kg = float(row.get('цена', 0)) / float(row.get('вес', 1))
+                    try:
+                        price_per_kg = float(row.get('цена', 0)) / float(row.get('вес', 1))
+                    except ValueError:
+                        price_per_kg = 0
                     file.write(
                         f"<tr><td>{idx}</td><td>{item_name}</td><td>{row.get('цена', '')}</td><td>{row.get('вес', '')}</td><td>{row.get('файл', '')}</td><td>{price_per_kg:.1f}</td></tr>"
                     )
@@ -72,7 +87,7 @@ class PriceMachine():
                 </body>
                 </html>
                 ''')
-            print(f"HTML файл успешно создан: {'output.html'}")
+            print(f"HTML файл успешно создан: {fname}")
         else:
             print("Нет данных для экспорта в HTML файл.")
 
@@ -90,8 +105,9 @@ class PriceMachine():
 
         return sorted_results
 
+
 pm = PriceMachine()
-print(pm.load_prices(r'C:\Users\user\Python Project 10\pythonProject8\pythonProject\Price_list_analyzer'))
+pm.load_prices(r'C:\Users\user\Python Project 10\pythonProject8\pythonProject\Price_list_analyzer\prices')
 
 
 try:
@@ -103,7 +119,7 @@ try:
             print("Работа завершена.")
             break
 
-        results = pm.search_product(search_query)
+        results = pm.find_text(search_query)
 
         if results:
             sorted_results = sorted(results, key=lambda x: float(x.get('цена', 0)) / float(x.get('вес', 1)))
@@ -114,10 +130,5 @@ try:
             print("Нет результатов по вашему запросу.")
             print(f"Вы искали: {search_query}")
 
-
 except Exception as e:
     print(f"Произошла ошибка: {e}")
-
-    def find_text(self, text):
-        print('the end')
-print(pm.export_to_html())

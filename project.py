@@ -51,7 +51,7 @@ class PriceMachine():
         sorted_results = sorted(results, key=lambda x: float(x.get('цена', 0)) / float(x.get('вес', 1)))
         return sorted_results
 
-    def export_to_html(self, fname='output.html'):
+    def export_to_html(self, fname=r'C:\Users\user\Python Project 10\pythonProject8\pythonProject\Price_list_analyzer\output.html'):
         if self.data:
             sorted_data = sorted(self.data, key=lambda x: float(x.get('цена', 0)) / float(x.get('вес', 1)))
             with open(fname, 'w', encoding='utf-8') as file:
@@ -119,7 +119,7 @@ try:
             print("Работа завершена.")
             break
 
-        results = pm.find_text(search_query)
+        results = pm._search_product_price_weight(search_query)#find_text(search_query)
 
         if results:
             sorted_results = sorted(results, key=lambda x: float(x.get('цена', 0)) / float(x.get('вес', 1)))
